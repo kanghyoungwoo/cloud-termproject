@@ -1,57 +1,52 @@
 package awsTest;
 
-import com.amazonaws.services.ec2.model.StartInstancesRequest;
+import java.util.Scanner;
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.AmazonClientException;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
-import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.Instance;
-//import com.amazonaws.AmazonClientException;
-//import com.amazonaws.services.s3control.AWSS3ControlClientBuilder;
-//import com.amazonaws.services.ec2.model.DryRunResult;
-//import com.amazonaws.services.ec2.model.DryRunSupportedRequest;
-import com.amazonaws.services.ec2.model.StartInstancesRequest;
-import com.amazonaws.services.ec2.model.StopInstancesRequest;
-
-import com.amazonaws.services.ec2.model.InstanceType;
-import com.amazonaws.services.ec2.model.RunInstancesRequest;
-import com.amazonaws.services.ec2.model.RunInstancesResult;
-//import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ec2.model.Reservation;
 
 import com.amazonaws.services.ec2.model.DescribeAvailabilityZonesResult;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.AvailabilityZone;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 
+import com.amazonaws.services.ec2.model.DryRunResult;
+import com.amazonaws.services.ec2.model.DryRunSupportedRequest;
+import com.amazonaws.services.ec2.model.StartInstancesRequest;
+import com.amazonaws.services.ec2.model.StopInstancesRequest;
+
+import com.amazonaws.services.ec2.model.InstanceType;
+import com.amazonaws.services.ec2.model.RunInstancesRequest;
+import com.amazonaws.services.ec2.model.RunInstancesResult;
 //import com.amazonaws.services.ec2.model.CreateTagsRequest;
 //import com.amazonaws.services.ec2.model.CreateTagsResult;
+//import com.amazonaws.services.ec2.model.Tag;
 
 import com.amazonaws.services.ec2.model.RebootInstancesRequest;
 import com.amazonaws.services.ec2.model.RebootInstancesResult;
-import com.amazonaws.services.ec2.model.DescribeImagesRequest;
+
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.Request;
 
 import com.amazonaws.services.ec2.model.Image;
+import com.amazonaws.services.ec2.model.DescribeImagesRequest;
+import com.amazonaws.services.ec2.model.DescribeImagesResult;
 
 import com.amazonaws.services.ec2.model.MonitorInstancesRequest;
 import com.amazonaws.services.ec2.model.UnmonitorInstancesRequest;
 
-//import java.util.Collection;
-//import java.util.List;
-import java.util.Scanner;
+import com.amazonaws.services.ec2.model.DescribeKeyPairsResult;
+import com.amazonaws.services.ec2.model.KeyPairInfo;
 
 import com.amazonaws.services.ec2.model.CreateKeyPairRequest;
 import com.amazonaws.services.ec2.model.CreateKeyPairResult;
 
-import com.amazonaws.services.ec2.model.DescribeKeyPairsResult;
-import com.amazonaws.services.ec2.model.KeyPairInfo;
-
 import com.amazonaws.services.ec2.model.DeleteKeyPairRequest;
 import com.amazonaws.services.ec2.model.DeleteKeyPairResult;
-
-import com.amazonaws.services.ec2.model.DescribeImagesResult;
 
 public class awsTest {
 	
@@ -97,7 +92,7 @@ public class awsTest {
 			 System.out.println(" 5. stop instance      6. create instance "); 
 			 System.out.println(" 7. reboot instance    8. list images ");
 			 System.out.println(" 9. monitor instance  10. unmonitor instance ");
-			 System.out.println(" 11. describe keypair 12. create keypair ");
+			 System.out.println(" 11. list keypair     12. create keypair ");
 			 System.out.println(" 13. delete keypair   99. quit ");
 			 System.out.println("------------------------------------------------------------");
 			 System.out.print("Enter an integer: "); 
@@ -134,7 +129,7 @@ public class awsTest {
 				  unmonitorInstance();
 				  break;
 			  case 11:
-				  describeKeypair();
+				  listKeypair();
 				  break;
 			  case 12:
 				  createKeypair();
@@ -144,7 +139,6 @@ public class awsTest {
 				  break;
 			  case 99: 
 				  System.exit(0);
-				  //isExit = true; 
 				  break; 
 				  
 			  default: 
@@ -163,7 +157,7 @@ public class awsTest {
 		while (!done) 
 		{ 
 			DescribeInstancesResult response = ec2.describeInstances(request); 
-			System.out.println("Response"); 
+
 			for (Reservation reservation : response.getReservations()) 
 			{
 				for (Instance instance : reservation.getInstances())
@@ -204,30 +198,40 @@ public class awsTest {
 	public static void startInstance() 
 	{ 
 		final AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient(); 
-	    //DryRunSupportedRequest<StartInstancesRequest> dry_request = () -> 
-	    //{
-	    //        StartInstancesRequest request = new StartInstancesRequest()
-	    //            .withInstanceIds(instance_id);
 
-	    //        return request.getDryRunRequest();
-	    //};
+		
 
-	    //    DryRunResult dry_response = ec2.dryRun(dry_request);
-
-	    //    if(!dry_response.isSuccessful()) {
-	    //        System.out.printf(
-	    //            "Failed dry run to start instance %s", instance_id);
-
-	    //        throw dry_response.getDryRunResponse();
-	    //    }
         System.out.println("Enter instance ID : ");
         Scanner scan = new Scanner(System.in);
-        String instance_id = scan.nextLine();
+        //String instance_id = scan.nextLine();
+        final String instance_id = scan.nextLine();
+            
+        //here
+		 DryRunSupportedRequest<StartInstancesRequest> dry_request = new DryRunSupportedRequest<StartInstancesRequest>() {
+			public Request<StartInstancesRequest> getDryRunRequest() {
+			StartInstancesRequest request = new StartInstancesRequest()
+			    .withInstanceIds(instance_id);
+
+			return request.getDryRunRequest();
+			}
+		};
+		
+        DryRunResult dry_response = ec2.dryRun(dry_request);
+
+        if(!dry_response.isSuccessful()) {
+            System.out.printf(
+                "Failed dry run to start instance %s", instance_id);
+
+            throw dry_response.getDryRunResponse();
+        }    
         
+        //here
 	    StartInstancesRequest request = new StartInstancesRequest().withInstanceIds(instance_id);
 
 	    ec2.startInstances(request);
 	    System.out.printf("Successfully started instance %s", instance_id);
+
+        	
 	    
 	}
 	
@@ -249,7 +253,30 @@ public class awsTest {
 		//final AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient(); 
         System.out.println("Enter instance iD : ");
         Scanner scan = new Scanner(System.in);
-        String instance_id = scan.nextLine();
+        //String instance_id = scan.nextLine();
+        final String instance_id = scan.nextLine();
+        
+
+        //here
+
+        DryRunSupportedRequest<StopInstancesRequest> dry_request = new DryRunSupportedRequest<StopInstancesRequest>() {
+			public Request<StopInstancesRequest> getDryRunRequest() {
+            StopInstancesRequest request = new StopInstancesRequest()
+                .withInstanceIds(instance_id);
+
+            return request.getDryRunRequest();
+            }
+		};
+
+        DryRunResult dry_response = ec2.dryRun(dry_request);
+
+        if(!dry_response.isSuccessful()) {
+            System.out.printf(
+                "Failed dry run to stop instance %s", instance_id);
+            throw dry_response.getDryRunResponse();
+        }
+        
+
         StopInstancesRequest request = new StopInstancesRequest().withInstanceIds(instance_id); 
         
         ec2.stopInstances(request);
@@ -263,8 +290,7 @@ public class awsTest {
 	public static void createInstance() 
 	{ 
 		Scanner scan = new Scanner(System.in); 
-		//System.out.println("Input create name"); 
-		//String name = scan.nextLine(); 
+
 		System.out.println("Enter ami id:"); 
 		String ami_id = scan.nextLine(); 
 		
@@ -312,16 +338,14 @@ public class awsTest {
 	//8. listImages
 	public static void listImages()
 	{
-        //final AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
-        //int flag = 1;
+        final AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
 		System.out.println("Listing images....");
 		DescribeImagesRequest request = new DescribeImagesRequest().withOwners("self");
-		//Collection<Image> images = ec2.describeImages(request).getImages();
 
 		DescribeImagesResult iresponse = ec2.describeImages(request);
 
 		for (Image Im : iresponse.getImages()) 
-		{// check this point again
+		{
 			System.out.printf("[ImageID] %s, [Name] %s, [Owner] %s \n", Im.getImageId(), Im.getName(),Im.getOwnerId());
 	    }
 	}
@@ -331,26 +355,33 @@ public class awsTest {
 	{
 		final AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
 		
-        //DryRunSupportedRequest<MonitorInstancesRequest> dry_request =
-        //    () -> {
-        //    MonitorInstancesRequest request = new MonitorInstancesRequest()
-        //        .withInstanceIds(instance_id);
-
-        //    return request.getDryRunRequest();
-        //};
-
-        //DryRunResult dry_response = ec2.dryRun(dry_request);
-
-        //if (!dry_response.isSuccessful()) {
-        //    System.out.printf(
-        //        "Failed dry run to enable monitoring on instance %s",
-        //        instance_id);
-
-        //    throw dry_response.getDryRunResponse();
-        //}
-        System.out.println("Enter instance iD : ");
+		System.out.println("Enter instance iD : ");
         Scanner scan = new Scanner(System.in);
-        String instance_id = scan.nextLine();
+        //String instance_id = scan.nextLine();
+        final String instance_id = scan.nextLine();
+        
+		//here
+        DryRunSupportedRequest<MonitorInstancesRequest> dry_request = new DryRunSupportedRequest<MonitorInstancesRequest>() {
+			public Request<MonitorInstancesRequest> getDryRunRequest() {
+            MonitorInstancesRequest request = new MonitorInstancesRequest()
+                .withInstanceIds(instance_id);
+
+            return request.getDryRunRequest();
+            }
+		};
+
+        DryRunResult dry_response = ec2.dryRun(dry_request);
+
+        if (!dry_response.isSuccessful()) {
+            System.out.printf(
+                "Failed dry run to enable monitoring on instance %s",
+                instance_id);
+
+            throw dry_response.getDryRunResponse();
+        }
+
+		//here
+
 		
         MonitorInstancesRequest request = new MonitorInstancesRequest().withInstanceIds(instance_id);
 
@@ -363,26 +394,29 @@ public class awsTest {
 	public static void unmonitorInstance()
 	{
 		final AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
-        System.out.println("Enter instance ID : ");
+        System.out.println("Enter instance iD : ");
         Scanner scan = new Scanner(System.in);
-        String instance_id = scan.nextLine();
-		//DryRunSupportedRequest<UnmonitorInstancesRequest> dry_request =
-	    //        () -> {
-	    //        UnmonitorInstancesRequest request = new UnmonitorInstancesRequest()
-	    //            .withInstanceIds(instance_id);
+        //String instance_id = scan.nextLine();
+        final String instance_id = scan.nextLine();
+        
+		DryRunSupportedRequest<UnmonitorInstancesRequest> dry_request = new DryRunSupportedRequest<UnmonitorInstancesRequest>() {
+			public Request<UnmonitorInstancesRequest> getDryRunRequest() {
+			UnmonitorInstancesRequest request = new UnmonitorInstancesRequest()
+			    .withInstanceIds(instance_id);
 
-	    //        return request.getDryRunRequest();
-	    //    };
+			return request.getDryRunRequest();
+			}
+		};
 
-	    //    DryRunResult dry_response = ec2.dryRun(dry_request);
+	        DryRunResult dry_response = ec2.dryRun(dry_request);
 
-	    //    if (!dry_response.isSuccessful()) {
-	    //        System.out.printf(
-	    //            "Failed dry run to disable monitoring on instance %s",
-	    //            instance_id);
+	        if (!dry_response.isSuccessful()) {
+	            System.out.printf(
+	                "Failed dry run to disable monitoring on instance %s",
+	                instance_id);
 
-	    //        throw dry_response.getDryRunResponse();
-	    //    }
+	            throw dry_response.getDryRunResponse();
+	        }
 
 	    UnmonitorInstancesRequest request = new UnmonitorInstancesRequest().withInstanceIds(instance_id);
 	    ec2.unmonitorInstances(request);
@@ -391,8 +425,8 @@ public class awsTest {
 	    
 	}
 	
-	//11. describeKeypair
-	public static void describeKeypair()
+	//11. listKeypair
+	public static void listKeypair()
 	{
         final AmazonEC2 ec2 = AmazonEC2ClientBuilder.defaultClient();
 
@@ -431,8 +465,9 @@ public class awsTest {
 
         CreateKeyPairResult response = ec2.createKeyPair(request);
 
-            System.out.printf("Successfully created key pair named %s",key_name);	
+        System.out.printf("Successfully created key pair named %s",key_name);	
 	}
+	
 	//13. deleteKeypair
 	public static void deleteKeypair()
 	{
